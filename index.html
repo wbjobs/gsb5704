@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图片拼接工坊 · 长图 / 九宫格 / 四宫格 / 自由布局</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">🖼️ 图片拼接工坊</div>
+  <div class="topbar-actions">
+    <button id="addBtn" class="btn">＋ 添加图片</button>
+    <button id="clearBtn" class="btn btn-ghost" disabled>清空</button>
+    <input type="file" id="fileInput" accept="image/*" multiple hidden>
+  </div>
+</header>
+
+<main class="workspace">
+  <!-- 左侧控制面板 -->
+  <aside class="panel">
+    <section class="panel-section">
+      <h3>布局模式</h3>
+      <div class="mode-grid" id="modeGroup">
+        <button class="mode-btn active" data-mode="long">长图</button>
+        <button class="mode-btn" data-mode="grid9">九宫格</button>
+        <button class="mode-btn" data-mode="grid4">四宫格</button>
+        <button class="mode-btn" data-mode="free">自由布局</button>
+      </div>
+    </section>
+
+    <section class="panel-section">
+      <h3>通用设置</h3>
+      <label class="ctl">
+        <span>间距 <em id="gapVal">12</em>px</span>
+        <input type="range" id="gap" min="0" max="120" value="12">
+      </label>
+      <label class="ctl">
+        <span>外边距 <em id="padVal">20</em>px</span>
+        <input type="range" id="pad" min="0" max="200" value="20">
+      </label>
+      <label class="ctl">
+        <span>背景色</span>
+        <span class="color-row">
+          <input type="color" id="bgColor" value="#ffffff">
+          <label class="check"><input type="checkbox" id="transparentBg"> 透明背景</label>
+        </span>
+      </label>
+      <label class="ctl">
+        <span>圆角 <em id="radiusVal">8</em>px</span>
+        <input type="range" id="radius" min="0" max="200" value="8">
+      </label>
+      <label class="ctl">
+        <span>边框粗细 <em id="borderVal">0</em>px</span>
+        <input type="range" id="borderWidth" min="0" max="60" value="0">
+      </label>
+      <label class="ctl" id="borderColorCtl" hidden>
+        <span>边框颜色</span>
+        <input type="color" id="borderColor" value="#dddddd">
+      </label>
+      <label class="ctl">
+        <span>适配方式</span>
+        <select id="fitMode">
+          <option value="cover">填充裁剪 (cover)</option>
+          <option value="contain">完整显示 (contain)</option>
+        </select>
+      </label>
+    </section>
+
+    <!-- 长图参数 -->
+    <section class="panel-section mode-opts" data-mode-opts="long">
+      <h3>长图设置</h3>
+      <label class="ctl">
+        <span>长图宽度 <em id="longWidthVal">1080</em>px</span>
+        <input type="range" id="longWidth" min="320" max="4000" step="20" value="1080">
+      </label>
+    </section>
+
+    <!-- 宫格参数 -->
+    <section class="panel-section mode-opts" data-mode-opts="grid" hidden>
+      <h3>宫格设置</h3>
+      <label class="ctl">
+        <span>单格尺寸 <em id="cellSizeVal">自动</em></span>
+        <input type="range" id="cellSize" min="200" max="3000" step="20" value="900">
+      </label>
+      <button class="btn btn-ghost btn-sm" id="cellAutoBtn">恢复自动</button>
+    </section>
+
+    <!-- 自由布局参数 -->
+    <section class="panel-section mode-opts" data-mode-opts="free" hidden>
+      <h3>自由布局</h3>
+      <label class="ctl">
+        <span>画布宽 <em id="freeWVal">1200</em>px</span>
+        <input type="range" id="freeW" min="320" max="4000" step="20" value="1200">
+      </label>
+      <label class="ctl">
+        <span>画布高 <em id="freeHVal">1200</em>px</span>
+        <input type="range" id="freeH" min="320" max="6000" step="20" value="1200">
+      </label>
+      <button class="btn btn-ghost btn-sm" id="resetFreeBtn">重新自动排列</button>
+      <p class="hint">在预览区直接拖动图片移动位置，拖右下角手柄缩放；拖底部缩略图可排序。</p>
+    </section>
+
+    <section class="panel-section">
+      <h3>导出</h3>
+      <label class="ctl">
+        <span>格式</span>
+        <select id="exportFormat">
+          <option value="image/png">PNG（保留透明）</option>
+          <option value="image/jpeg">JPEG（体积小）</option>
+          <option value="image/webp">WebP</option>
+        </select>
+      </label>
+      <label class="ctl" id="qualityCtl" hidden>
+        <span>质量 <em id="qualityVal">92</em>%</span>
+        <input type="range" id="quality" min="10" max="100" value="92">
+      </label>
+      <div class="export-size" id="exportSize">预计导出：—</div>
+      <div class="export-warn" id="exportWarn" hidden></div>
+      <button class="btn btn-primary btn-block" id="exportBtn" disabled>导出图片</button>
+      <button class="btn btn-ghost btn-block" id="cancelExportBtn" hidden>取消导出</button>
+    </section>
+  </aside>
+
+  <!-- 中间预览 -->
+  <section class="preview-wrap">
+    <div class="preview-scroll" id="previewScroll">
+      <div class="preview-stage" id="previewStage">
+        <div class="preview-canvas" id="previewCanvas"></div>
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">🖼️</div>
+          <p>点击「添加图片」或把图片拖到这里</p>
+          <p class="sub">支持多张、超大图片与透明 PNG；所有处理在 Web Worker 中进行</p>
+        </div>
+      </div>
+      <div class="drop-overlay" id="dropOverlay">松开即可导入图片</div>
+    </div>
+  </section>
+
+  <!-- 底部缩略图条 -->
+  <aside class="filmstrip-wrap">
+    <div class="filmstrip" id="filmstrip"></div>
+  </aside>
+</main>
+
+<div class="toast" id="toast" hidden></div>
+
+<!-- 自定义确认弹窗（超大尺寸导出） -->
+<div class="modal-mask" id="confirmModal" hidden>
+  <div class="modal">
+    <h3 id="confirmTitle">确认导出？</h3>
+    <p id="confirmText"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="confirmCancel">取消</button>
+      <button class="btn btn-primary" id="confirmOk">仍然导出</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/engine.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
